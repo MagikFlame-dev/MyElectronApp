@@ -1,0 +1,31 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "include": [
+    "src/renderer/type-declarations/env.d.ts",
+    "src/renderer/**/*",
+    "src/renderer/**/*.vue",
+    "src/preload/*.d.ts",
+    "src/preload/index.global.ts",
+    "src/renderer/App.vue",
+    "src/renderer/main.ts"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "module": "node16",
+    "moduleResolution": "node16",
+    "paths": {
+      "@renderer/*": [
+        "./src/renderer/*"
+      ],
+      "@preload/*": [
+        "./src/preload/*"
+      ],
+      "@main/*": [
+        "./src/main/*"
+      ],
+      "@build/*": [
+        "./build/*"
+      ]
+    }
+  }
+}

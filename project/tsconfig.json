@@ -1,0 +1,15 @@
+{
+  "files": [],
+  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }],
+  "compilerOptions": {
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@renderer": ["./src", "./renderer"],
+      "@main": ["./src", "./main"],
+      "@preload": ["./src", "./preload"],
+      "@build": ["./build"],
+    },
+    "types": ["electron-vite/node"]
+  },
+}
