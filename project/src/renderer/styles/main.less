@@ -1,0 +1,41 @@
+// colors
+:root {
+    --pallete-1: #C9EDDC;
+    --pallete-2: #89B6A5;
+    --pallete-3: #82968C;
+    --pallete-4: #6A706E;
+    --pallete-5: #392c3a;
+}
+@media (prefers-color-scheme: light) {
+    :root {
+        --font-color: black;
+        --bg-color: white;
+        --border-color: var(--pallete-5);
+    }
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --font-color: white;
+        --bg-color: color-mix(in srgb, var(--pallete-5), black 66%);
+        --border-color: color-mix(in srgb, var(--pallete-5), white 15%);
+    }
+}
+:root {
+    --transparent-bg-0: color-mix(in srgb, var(--bg-color), transparent 10%);
+    --transparent-bg-1: color-mix(in srgb, var(--bg-color), transparent 50%);
+    --transparent-bg-2: color-mix(in srgb, var(--bg-color), transparent 90%);
+}
+
+// app
+body {
+    margin: 0px;
+    padding: 0px;
+}
+#app {
+    margin: 0px;
+    padding: 0px;
+    color: var(--font-color);
+    background-color: transparent;
+}
+
+// title-bar
