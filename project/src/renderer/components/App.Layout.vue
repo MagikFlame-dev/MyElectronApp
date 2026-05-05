@@ -37,7 +37,6 @@
     width: calc(100vw - 2px);
     height: calc(100vh - 2px);
     border: 1px solid var(--border-color);
-    background-color: var(--transparent-bg-0);
     border-radius: var(--border-radius);
     display: grid;
     grid-template:
@@ -73,7 +72,6 @@
     overflow: hidden;
 }
 .app-layout-panel {
-    background-color: var(--bg-color);
     &.center {
         grid-area: c;
     }
@@ -104,7 +102,4 @@
     overflow: hidden;
     font-size: small;
 }
-
-
-
 </style>

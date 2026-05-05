@@ -1,36 +1,22 @@
 import { BrowserWindow, ipcMain } from "electron";
+import { Channels } from "./index.ipc-channels.js";
 
-enum ChannelsIn {
-    Close = 'window-close',
-    Minimize = 'window-minimize',
-    ToggleMaximize = 'window-toggle-maximize',
-    ToggleFullscreen = 'window-toggle-fullscreen',
-    GetFullScreen = 'window-get-full-screen',
-    GetMaximized = 'window-get_maximized',
-}
-enum ChannelsOut {
-    Closed = 'window-closed',
-    Minimized = 'window-minimized',
-    ToggledMaximize = 'window-toggled-maximize',
-    ToggledFullscreen = 'window-toggled-fullscreen',
-}
-
-export class IPCWindowControls {    
+export class IPCWindowControls {
     static init(win: BrowserWindow) {
-        ipcMain.on(ChannelsIn.Close, () => {
+        ipcMain.on(Channels.window.in.Close, () => {
             win.close()
         })
-        ipcMain.on(ChannelsIn.Minimize, () => {
+        ipcMain.on(Channels.window.in.Minimize, () => {
             win.minimize()
         })
-        ipcMain.on(ChannelsIn.ToggleMaximize, () => {
+        ipcMain.on(Channels.window.in.ToggleMaximize, () => {
             if (win.isMaximized()) {
                 win.restore()
             } else {
                 win.maximize()
             }
         })
-        ipcMain.on(ChannelsIn.ToggleFullscreen, () => {
+        ipcMain.on(Channels.window.in.ToggleFullscreen, () => {
             if (win.isFullScreen()) {
                 win.setFullScreen(false)
             } else {
@@ -39,19 +25,22 @@ export class IPCWindowControls {
         })
 
         win.addListener('enter-full-screen', () => {
-            ipcMain.emit(ChannelsOut.ToggledFullscreen, true)
+            ipcMain.emit(Channels.window.out.ToggledFullscreen, true)
         })
         win.addListener('leave-full-screen', () => {
-            ipcMain.emit(ChannelsOut.ToggledFullscreen, false)
+            ipcMain.emit(Channels.window.out.ToggledFullscreen, false)
         })
         win.addListener('minimize', () => {
-            ipcMain.emit(ChannelsOut.Minimized, true)
+            ipcMain.emit(Channels.window.out.Minimized, true)
         })
         win.addListener('maximize', () => {
-            ipcMain.emit(ChannelsOut.ToggledMaximize, true)
+            ipcMain.emit(Channels.window.out.ToggledMaximized, true)
         })
         win.addListener('restore', () => {
-            ipcMain.emit(ChannelsOut.ToggledMaximize, false)
+            ipcMain.emit(Channels.window.out.ToggledMaximized, false)
+        })
+        win.addListener('unmaximize', () => {
+            ipcMain.emit(Channels.window.out.ToggledMaximized, false)
         })
     }
 }

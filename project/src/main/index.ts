@@ -13,8 +13,7 @@ function createWindow() {
     minWidth: 360,
     minHeight: 240,
     height: 670,
-    transparent: true,
-    roundedCorners: true,
+    titleBarStyle: 'hidden',
     frame: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
