@@ -1,11 +1,15 @@
 <script setup lang="ts">
+import AppTitlebar from './App.Titlebar.vue';
+
 
 </script>
 
 <template>
     <div class="app-layout">
         <header class="app-layout-header">
-            <slot name="title">Title</slot>
+            <slot name="title">
+                <AppTitlebar></AppTitlebar>
+            </slot>
         </header>
         <main class="app-layout-panel center">
             <slot name="panel-center">
@@ -64,12 +68,18 @@
 }
 .app-layout-header {
     app-region: drag;
+    -webkit-drag-region: drag;
     border-bottom-width: 1px;
     grid-area: h;
-    -webkit-drag-region: drag;
     user-select: none;
     -webkit-user-select: none;
     overflow: hidden;
+    min-height: 1rem;
+
+    *:is([role=button], [role=link], area, a, input, button, [nodrag]) {
+        app-region: no-drag !important;
+        -webkit-drag-region: no-drag !important;
+    }
 }
 .app-layout-panel {
     &.center {
