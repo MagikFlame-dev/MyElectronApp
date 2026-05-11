@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { useAppSettingsStore } from '@renderer/scripts/stores.js';
 
+const store = useAppSettingsStore()
 </script>
 
 <template>
     <span class="titlebar-panel-container">
         <span class="titlebar-panel start">
-            MyElectronApp
+            {{ store.title }}
         </span>
         <span class="titlebar-panel center">
             

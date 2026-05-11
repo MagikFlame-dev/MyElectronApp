@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppLayoutContent from './App.Layout.Content.vue';
 import AppLayoutFooter from './App.Layout.Footer.vue';
 import AppLayoutTitlebar from './App.Layout.Titlebar.vue';
 </script>
@@ -11,11 +12,7 @@ import AppLayoutTitlebar from './App.Layout.Titlebar.vue';
             </slot>
         </header>
         <main class="app-layout-panel center">
-            <slot name="panel-center">
-                <slot name="default">
-                    <div> . . . </div>
-                </slot>
-            </slot>
+            <AppLayoutContent></AppLayoutContent>
         </main>
         <footer class="app-layout-footer">
             <slot name="footer">
