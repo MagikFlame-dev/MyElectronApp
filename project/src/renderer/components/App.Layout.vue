@@ -53,6 +53,7 @@ import AppLayoutTitlebar from './App.Layout.Titlebar.vue';
 .app-layout-header {
     app-region: drag;
     -webkit-drag-region: drag;
+    -webkit-drag-region: drag;
     border-bottom-width: 1px;
     grid-area: h;
     user-select: none;
