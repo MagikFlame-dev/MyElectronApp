@@ -1,11 +1,14 @@
 <script setup lang="ts">
-
+import AppLayoutFooter from './App.Layout.Footer.vue';
+import AppLayoutTitlebar from './App.Layout.Titlebar.vue';
 </script>
 
 <template>
     <div class="app-layout">
         <header class="app-layout-header">
-            <slot name="title">Title</slot>
+            <slot name="title">
+                <AppLayoutTitlebar></AppLayoutTitlebar>
+            </slot>
         </header>
         <main class="app-layout-panel center">
             <slot name="panel-center">
@@ -14,20 +17,10 @@
                 </slot>
             </slot>
         </main>
-        <aside class="app-layout-panel top" :class="{hide: true}">
-            <slot name="panel-top"></slot>
-        </aside>
-        <aside class="app-layout-panel left" :class="{hide: true}">
-            <slot name="panel-left"></slot>
-        </aside>
-        <aside class="app-layout-panel right" :class="{hide: true}">
-            <slot name="panel-right"></slot>
-        </aside>
-        <aside class="app-layout-panel bottom" :class="{hide: true}">
-            <slot name="panel-bottom"></slot>
-        </aside>
         <footer class="app-layout-footer">
-            <slot name="footer"></slot>
+            <slot name="footer">
+                <AppLayoutFooter></AppLayoutFooter>
+            </slot>
         </footer>
     </div>
 </template>
@@ -40,20 +33,14 @@
     border-radius: var(--border-radius);
     display: grid;
     grid-template:
-        'h h h'
-        'l t r'
-        'l c r'
-        'l b r'
-        'f f f';
+        'h'
+        'c'
+        'f';
     grid-template-columns:
-        min-content
-        auto
-        min-content;
+        auto;
     grid-template-rows:
         min-content
-        min-content
         auto
-        min-content
         min-content;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
@@ -62,38 +49,25 @@
     overflow: auto;
     border: 0px solid var(--border-color);
 }
+[app-drag],
 .app-layout-header {
     app-region: drag;
+    -webkit-drag-region: drag;
     border-bottom-width: 1px;
     grid-area: h;
-    -webkit-drag-region: drag;
     user-select: none;
     -webkit-user-select: none;
     overflow: hidden;
+    min-height: 1rem;
+
+    *:is(area, a, button, [role=link], [role=button], input, [app-no-drag]) {
+        app-region: no-drag !important;
+        -webkit-drag-region: no-drag !important;
+    }
 }
 .app-layout-panel {
     &.center {
         grid-area: c;
-    }
-    &.top {
-        border-bottom-width: 1px;
-        grid-area: t;
-    }
-    &.bottom {
-        border-top-width: 1px;
-        grid-area: b;
-    }
-    &.left {
-        border-right-width: 1px;
-        grid-area: l;
-    }
-    &.right {
-        border-left-width: 1px;
-        grid-area: r;
-        &.hide {
-            width: 0px;
-            border: none;
-        }
     }
 }
 .app-layout-footer {

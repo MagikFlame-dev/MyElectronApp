@@ -1,8 +1,6 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, nativeTheme } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { IPCWindowControls } from './ipc.win-controls.js'
-
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
@@ -14,6 +12,10 @@ function createWindow() {
     minHeight: 240,
     height: 670,
     titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#ffffff00',
+      symbolColor: '#ffffff',
+    },
     frame: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
@@ -63,9 +65,21 @@ app.whenReady().then(() => {
   })
 
   const win = createWindow()
+  applyTitleBarTheme()
 
+  nativeTheme.on('updated', () => {
+    applyTitleBarTheme()
+  })
+
+  function applyTitleBarTheme() {
+    const isDark = nativeTheme.shouldUseDarkColors
+
+    win.setTitleBarOverlay({
+      color: isDark ? '#00000000' : '#00000000',
+      symbolColor: isDark ? '#ffffff' : '#000000',
+    })
+  }
   // IPC
-  IPCWindowControls.init(win);
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
