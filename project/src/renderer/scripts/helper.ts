@@ -4,6 +4,8 @@ export function forcePropertyUndefined<T>(o: T, key: keyof T) {
     (o as any)[key] = undefined;
 }
 
+export type HintedString<T extends string> = T | (string & {})
+
 export type DeepMaybeRef<T> =
     T extends Function ? T :
     T extends object ? { [K in keyof T]: DeepMaybeRef<T[K]> } :
