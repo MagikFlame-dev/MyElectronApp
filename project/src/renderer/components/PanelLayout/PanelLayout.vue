@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePanelRegistry } from '@renderer/registries/panels.js';
 import { AppLayoutBase } from '@renderer/scripts/layout.js';
 import { provide } from 'vue';
 
@@ -6,13 +7,15 @@ const props = defineProps<{
   layout: AppLayoutBase
   withGutter?: boolean
 }>()
+const registry = usePanelRegistry()
+
 provide<AppLayoutBase>('panelMeta', props.layout)
 </script>
 
 
 <template>
-  <div v-if="AppLayoutBase.isPanel(layout)" class="panel">
-    <component :is="layout.component" v-bind="(layout.props as object)"></component>
+  <div v-if="AppLayoutBase.isPanel(layout) && registry.has(layout.component)" class="panel">
+    <component :is="registry.get(layout.component)" v-bind="layout.props as any"></component>
   </div>
   <div v-else-if="AppLayoutBase.isSplit(layout)" :class="{split: true, root: AppLayoutBase.isRoot(layout)}" :direction="layout.direction">
     <PanelLayout v-for="(panel, index) in layout.panels" :key="index" :layout="panel" :with-gutter="(index < layout.panels.length - 1)"></PanelLayout>

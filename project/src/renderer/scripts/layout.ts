@@ -1,5 +1,8 @@
-import { Component, markRaw } from "vue"
 import { ReactiveComponentProps } from "./helper.js"
+import { usePanelRegistry } from "@renderer/registries/panels.js"
+import { RegistryKey, RegistryValue } from "./registry.js"
+
+type ComponentRegistry = ReturnType<typeof usePanelRegistry>
 
 export class AppLayoutTree {
   public readonly root: AppLayoutRoot
@@ -85,13 +88,13 @@ export abstract class AppLayoutBase {
 
 }
 
-export class AppLayoutPanel<C extends Component = Component> extends AppLayoutBase {
+export class AppLayoutPanel<C extends RegistryKey<ComponentRegistry>> extends AppLayoutBase {
   public component: C
-  public props: ReactiveComponentProps<C>
+  public props: ReactiveComponentProps<RegistryValue<ComponentRegistry, C>>
 
-  constructor(component: C, props: ReactiveComponentProps<C>) {
+  constructor(component: C, props: ReactiveComponentProps<RegistryValue<ComponentRegistry, C>>) {
     super()
-    this.component = markRaw(component)
+    this.component = component
     this.props = props
   }
 

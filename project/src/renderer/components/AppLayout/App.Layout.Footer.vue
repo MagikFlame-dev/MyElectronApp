@@ -10,7 +10,7 @@ const appSession = useAppSessionStore()
             
         </span>
         <span class="footer-panel end">
-            {{ appSession.getVersionString() }}
+            {{ appSession.version.toString() }}
         </span>
     </span>
 </template>

@@ -2,8 +2,8 @@ import RouterOutletPanel from "@renderer/components/AppPanels/RouterOutlet.panel
 import { Registry } from "@renderer/scripts/registry.js"
 import { reactive } from "vue"
 
-const layoutComponents = reactive(Registry.create(
-    ['router-outlet', RouterOutletPanel]
+const panelRegistry = reactive(Registry.create(
+    ['router-outlet', RouterOutletPanel],
 ))
 
-export default layoutComponents
+export const usePanelRegistry = () => panelRegistry

@@ -7,12 +7,10 @@ const useAppSessionStore = defineStore('app-session', () => {
         major: 0,
         minor: 0,
         patch: 0,
+        toString: () => { return `v:${version.major}.${version.minor}.${version.patch}`}
     })
-    function getVersionString(): string {
-        return `v:${version.major}.${version.minor}.${version.patch}`
-    }
 
-    return { title, version, getVersionString }
+    return { title, version }
 })
 
 export default useAppSessionStore
