@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useAppSettingsStore } from '@renderer/scripts/stores.js';
+import useAppSessionStore from '@renderer/stores/session.js';
 
-const store = useAppSettingsStore()
+const appSession = useAppSessionStore()
 </script>
 
 <template>
     <span class="titlebar-panel-container">
         <span class="titlebar-panel start">
-            {{ store.title }}
+            {{ appSession.title }}
         </span>
         <span class="titlebar-panel center">
             

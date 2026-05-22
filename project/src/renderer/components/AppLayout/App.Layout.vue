@@ -2,22 +2,22 @@
 import AppLayoutContent from './App.Layout.Content.vue';
 import AppLayoutFooter from './App.Layout.Footer.vue';
 import AppLayoutTitlebar from './App.Layout.Titlebar.vue';
+import AppLayoutToolbar from './App.Layout.Toolbar.vue';
 </script>
 
 <template>
     <div class="app-layout">
         <header class="app-layout-header">
-            <slot name="title">
-                <AppLayoutTitlebar></AppLayoutTitlebar>
-            </slot>
+            <AppLayoutTitlebar></AppLayoutTitlebar>
         </header>
-        <main class="app-layout-panel center">
+        <aside class="app-layout-side-toolbar">
+            <AppLayoutToolbar></AppLayoutToolbar>
+        </aside>
+        <main class="app-layout-panels">
             <AppLayoutContent></AppLayoutContent>
         </main>
         <footer class="app-layout-footer">
-            <slot name="footer">
-                <AppLayoutFooter></AppLayoutFooter>
-            </slot>
+            <AppLayoutFooter></AppLayoutFooter>
         </footer>
     </div>
 </template>
@@ -30,10 +30,11 @@ import AppLayoutTitlebar from './App.Layout.Titlebar.vue';
     border-radius: var(--border-radius);
     display: grid;
     grid-template:
-        'h'
-        'c'
-        'f';
+        'h h'
+        't c'
+        'f f';
     grid-template-columns:
+        min-content
         auto;
     grid-template-rows:
         min-content
@@ -43,7 +44,6 @@ import AppLayoutTitlebar from './App.Layout.Titlebar.vue';
 }
 .app-layout > * {
     position: relative;
-    overflow: auto;
     border: 0px solid var(--border-color);
 }
 [app-drag],
@@ -63,10 +63,12 @@ import AppLayoutTitlebar from './App.Layout.Titlebar.vue';
         -webkit-drag-region: no-drag !important;
     }
 }
-.app-layout-panel {
-    &.center {
-        grid-area: c;
-    }
+.app-layout-side-toolbar {
+    grid-area: t;
+    border-right-width: 1px;
+}
+.app-layout-panels {
+    grid-area: c;
 }
 .app-layout-footer {
     border-top-width: 1px;

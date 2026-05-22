@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import useAppSessionStore from '@renderer/stores/session.js';
 
+const appSession = useAppSessionStore()
 </script>
 
 <template>
@@ -8,7 +10,7 @@
             
         </span>
         <span class="footer-panel end">
-            v:0.0.0
+            {{ appSession.getVersionString() }}
         </span>
     </span>
 </template>
