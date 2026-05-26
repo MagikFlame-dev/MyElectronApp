@@ -1,18 +1,20 @@
-type Entry<K extends string, T> = [K, T]
+import { markRaw } from "vue"
+
+type Entry<K extends string, T extends {}> = [K, T]
 export type RegistryKey<R extends Registry> = keyof R['registry']
 export type RegistryValue<R extends Registry, K extends RegistryKey<R>> = R['registry'][K]
 
-export class Registry<T = unknown, R extends Record<string, T> = {}> {
+export class Registry<T extends {} = {}, R extends Record<string, T> = {}> {
     public readonly registry: Readonly<R>
 
-    static create<T, K extends string>(...entries: Entry<K, T>[]): Registry<T, Record<K, T>> {
+    static create<T extends {}, K extends string>(...entries: Entry<K, T>[]): Registry<T, Record<K, T>> {
         const result = new Registry<T, {}>({})
         return result.register(...entries)
     }
     
     public register<K extends string>(...entries: Entry<K, T>[]): Registry<T, R & Record<K, T>> {
         entries.forEach(entrie => {
-            (this.registry as any)[entrie[0]] = entrie[1]
+            (this.registry as any)[entrie[0]] = markRaw(entrie[1])
         })
         return this
     }

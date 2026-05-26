@@ -3,5 +3,5 @@ defineProps<{}>()
 </script>
 
 <template>
-    <div>router-outlet-panel</div>
+    <div>RouterOutlet</div>
 </template>

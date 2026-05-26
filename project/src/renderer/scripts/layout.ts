@@ -3,6 +3,14 @@ import { usePanelRegistry } from "@renderer/registries/panels.js"
 import { RegistryKey, RegistryValue } from "./registry.js"
 
 type ComponentRegistry = ReturnType<typeof usePanelRegistry>
+type LayoutTabID<T extends LayoutTab[]> = T[number]['panel']['ID']
+type LayoutTab = {
+  header: string,
+  panel: AppLayoutBase
+}
+type LayoutMeta = Partial<{
+  behavior: 'expand'
+}>
 
 export class AppLayoutTree {
   public readonly root: AppLayoutRoot
@@ -20,8 +28,8 @@ export class AppLayoutTree {
 }
 
 export abstract class AppLayoutBase {
-  static isPanel(o?: AppLayoutBase): o is AppLayoutPanel<any> {
-    return !!(o as AppLayoutPanel<any>).component
+  static isPanel<C extends RegistryKey<ComponentRegistry> = RegistryKey<ComponentRegistry>>(o?: AppLayoutBase): o is AppLayoutPanel<C> {
+    return !!(o as AppLayoutPanel<C>).component
   }
   static isSplit(o?: AppLayoutBase): o is AppLayoutSplit {
     return !!(o as AppLayoutSplit).panels
@@ -29,19 +37,37 @@ export abstract class AppLayoutBase {
   static isRoot(o?: AppLayoutBase): o is AppLayoutRoot {
     return !!(o as AppLayoutRoot).isRoot
   }
+  static isTabs(o?: AppLayoutBase): o is AppLayoutTabs {
+    return (!!o && Object.hasOwn(o, 'currentID'))
+  }
 
   private static idCounter = 0
   private static get nextID(): string { return `#${(AppLayoutBase.idCounter++).toString(16).padStart(8, '0')}` }
   
   public readonly ID: string
   public parent?: AppLayoutBase
+  public style: Partial<CSSStyleDeclaration>
+  public meta: LayoutMeta
+
 
   constructor() {
     this.parent = undefined
     this.ID = AppLayoutBase.nextID
+    this.meta = {}
+    this.style = {}
   }
 
-  setParent(parent: AppLayoutBase | undefined): typeof this {
+  withMeta(meta: this['meta']): this {
+    this.meta = meta
+    return this
+  }
+
+  withStyle(style: this['style']): this {
+    this.style = style
+    return this
+  }
+
+  withParent(parent: this['parent']): typeof this {
     this.parent = parent
     return this
   }
@@ -55,7 +81,7 @@ export abstract class AppLayoutBase {
     }
     else if (AppLayoutBase.isSplit(this)) {
       this.panels.push(...panels)
-      panels.forEach(p => p.setParent(this))
+      panels.forEach(p => p.withParent(this))
     }
     return this
   }
@@ -92,7 +118,7 @@ export class AppLayoutPanel<C extends RegistryKey<ComponentRegistry>> extends Ap
   public component: C
   public props: ReactiveComponentProps<RegistryValue<ComponentRegistry, C>>
 
-  constructor(component: C, props: ReactiveComponentProps<RegistryValue<ComponentRegistry, C>>) {
+  constructor(component: AppLayoutPanel<C>['component'], props: AppLayoutPanel<C>['props']) {
     super()
     this.component = component
     this.props = props
@@ -104,10 +130,10 @@ export class AppLayoutPanel<C extends RegistryKey<ComponentRegistry>> extends Ap
     }
 
     const newSplit = new AppLayoutSplit(direction ?? this.parent.getOppositeDirection())
-    .setParent(this.parent)
+    .withParent(this.parent)
 
     this.parent.panels.splice(this.parent.panels.indexOf(this), 1, newSplit)
-    this.setParent(newSplit)
+    this.withParent(newSplit)
 
     return newSplit
   }
@@ -121,7 +147,7 @@ export class AppLayoutSplit extends AppLayoutBase {
   public direction: 'row' | 'column';
   public readonly panels: AppLayoutBase[]
   
-  constructor(direction: AppLayoutSplit['direction'], ...panels: AppLayoutBase[]) {
+  constructor(direction: AppLayoutSplit['direction'], ...panels: AppLayoutSplit['panels']) {
     super()
     this.direction = direction
     this.panels = panels
@@ -135,9 +161,45 @@ export class AppLayoutSplit extends AppLayoutBase {
   }
 }
 
+export class AppLayoutTabs extends AppLayoutBase {
+  public readonly tabs: LayoutTab[]
+  private currentID: LayoutTabID<this['tabs']> | null
+
+  constructor(...tabs: AppLayoutTabs['tabs']) {
+    super()
+    this.tabs = tabs
+    this.currentID = this.tabs.at(0)?.panel.ID ?? null
+  }
+
+  get current(): LayoutTab | undefined {
+    return this.tabs.find(t => t.panel.ID === this.currentID)
+  }
+  get panel(): AppLayoutBase | undefined {
+    return this.current?.panel
+  }
+
+  select(id: LayoutTabID<this['tabs']> | null) {
+    this.currentID = id
+  }
+
+  addTab(header: string, panel: AppLayoutBase): AppLayoutTabs {
+    this.tabs.push({header: header, panel: panel})
+    if (this.currentID === null) {
+      this.currentID = panel.ID
+    }
+    return this
+  }
+
+  removeTab(id: LayoutTabID<this['tabs']>) {
+    const idx = this.tabs.findIndex(t => t.panel.ID === id);
+    if (idx >= 0) {
+      this.tabs.splice(idx, 1)
+    }
+  }
+}
+
 export class AppLayoutRoot extends AppLayoutSplit {
   readonly isRoot: boolean = true
-  readonly meta: any
 
   constructor(direction?: AppLayoutRoot['direction'], ...panels: AppLayoutBase[]) {
     super(direction ?? 'row', ...panels)

@@ -6,9 +6,9 @@ const layoutStore = useAppLayoutStore()
 </script>
 
 <template>
-    <span class="content-panel-container">
+    <div class="content-panel-container" :key="JSON.stringify(layoutStore)">
         <PanelLayout :layout="layoutStore.layout.root"></PanelLayout>
-    </span>
+    </div>
 </template>
 
 <style lang="less" scoped>
