@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import useAppLayoutStore from '@renderer/stores/layout.js';
-import PanelLayout from '../PanelLayout/PanelLayout.vue';
 
-const layoutStore = useAppLayoutStore()
 </script>
 
 <template>
-    <div class="content-panel-container" :key="JSON.stringify(layoutStore)">
-        <PanelLayout :layout="layoutStore.layout.root"></PanelLayout>
+    <div class="content-panel-container">
+
     </div>
 </template>
 
