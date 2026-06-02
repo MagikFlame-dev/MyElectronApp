@@ -19,3 +19,41 @@ export type ComponentProps<C extends Component> = C extends new (...args: any) =
 
 export type ReactiveComponentProps<C extends Component> =
     DeepMaybeRef<ComponentProps<C>>
+
+export class KeyPressStack {
+    private pressedIndizes: {[key: string]: number}
+    private pressed: string[]
+    
+    constructor() {
+        this.pressedIndizes = {}
+        this.pressed = []
+    }
+
+    add(key: string) {
+        if (!this.pressed.includes(key)) {
+            this.pressed.push(key)
+            this.pressedIndizes[key] = (this.pressed.length - 1)
+        }
+    }
+    remove(key: string) {
+        this.pressed.splice(this.pressedIndizes[key], 1)
+        delete this.pressedIndizes[key]
+    }
+
+    isShortCut(...keys: string[]): boolean {
+        let shortCutIndex = 0
+
+        console.log(`testing short-cut:${keys}`);
+
+        for (const key of this.pressed) {
+            console.log(key)
+            if (keys[shortCutIndex].toLowerCase() === key.toLowerCase()) {
+                shortCutIndex++
+            }
+            if (shortCutIndex === keys.length) {
+                return true
+            }
+        }
+        return false
+    }
+}

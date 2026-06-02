@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import ParserTest from '../ParserTest/ParserTest.vue';
+
 
 </script>
 
 <template>
     <div class="content-panel-container">
-
+        <ParserTest></ParserTest>
     </div>
 </template>
 
