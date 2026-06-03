@@ -1,4 +1,5 @@
 import { Component, MaybeRefOrGetter } from "vue";
+import { UnexpectedValueError } from "./errors.js";
 
 export function forcePropertyUndefined<T>(o: T, key: keyof T) {
     (o as any)[key] = undefined;
@@ -20,40 +21,64 @@ export type ComponentProps<C extends Component> = C extends new (...args: any) =
 export type ReactiveComponentProps<C extends Component> =
     DeepMaybeRef<ComponentProps<C>>
 
-export class KeyPressStack {
-    private pressedIndizes: {[key: string]: number}
-    private pressed: string[]
+
+
+export interface IConsumerWithCurrent<Value, Test> extends Consumer<Value, Test> {
+    get current(): Value
+}
+export interface IEOFConsumer<Value, Test> extends Consumer<Value, Test> {
+    get current(): undefined
+    get next(): undefined
+}
+
+export abstract class Consumer<Value, Test, Target extends ArrayLike<Value> = ArrayLike<Value>> {
+    protected idx: number
+    protected target: Target
     
-    constructor() {
-        this.pressedIndizes = {}
-        this.pressed = []
+    public get current(): Value | undefined {
+        return this.valueAt(this.idx)
     }
 
-    add(key: string) {
-        if (!this.pressed.includes(key)) {
-            this.pressed.push(key)
-            this.pressedIndizes[key] = (this.pressed.length - 1)
+    public peek(offset: number): Value | undefined {
+        return this.valueAt(this.idx + offset)
+    }
+
+    public get index(): number {
+        return this.idx;
+    }
+
+    constructor(value: Target) {
+        this.target = value
+        this.idx = 0
+    }
+
+    private valueAt(idx: number): Value | undefined {
+        return idx < this.target.length ? this.target[idx] : undefined 
+    }
+
+    public hasCurrent(): this is IConsumerWithCurrent<Value, Test> {
+        return this.current !== undefined
+    }
+
+    public isEof(): this is IEOFConsumer<Value, Test> {
+        return this.current === undefined
+    }
+
+    public reset() {
+        this.idx = 0
+    }
+
+    public advance(by: number = 1) {
+        this.idx += by
+    }
+
+    public expect(expected: Test): boolean {
+        if (this.match(expected)) {
+            this.advance()
+            return true
         }
-    }
-    remove(key: string) {
-        this.pressed.splice(this.pressedIndizes[key], 1)
-        delete this.pressedIndizes[key]
+        throw new UnexpectedValueError(expected, this.current)
     }
 
-    isShortCut(...keys: string[]): boolean {
-        let shortCutIndex = 0
-
-        console.log(`testing short-cut:${keys}`);
-
-        for (const key of this.pressed) {
-            console.log(key)
-            if (keys[shortCutIndex].toLowerCase() === key.toLowerCase()) {
-                shortCutIndex++
-            }
-            if (shortCutIndex === keys.length) {
-                return true
-            }
-        }
-        return false
-    }
+    abstract match(expected: Test): this is IConsumerWithCurrent<Value, Test>
 }

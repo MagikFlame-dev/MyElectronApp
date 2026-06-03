@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { lexer } from './ParserTest.js';
 
 const outerText = ref<string>('')
 defineModel<string>('text', {
@@ -15,36 +16,98 @@ function onInput($event: InputEvent) {
     outerText.value = target.innerText
 }
 
+const tokenString = computed<string>(() => {
+    try {
+        const tokens = lexer.analyse(outerText.value)
+        return JSON.stringify(tokens)
+    } catch (error) {
+        return `${error}`
+    }
+})
+
+type TOutputDisplayOptions = 'raw' | 'tokens' | 'tree' | 'result'
+const outputDisplayOption = ref<TOutputDisplayOptions>('tokens')
+
 </script>
 
 <template>
     <div class="parser-test-workspace">
-
-        <div
-            class="input"
-            contenteditable
-            @input="onInput">
+        <div class="tool-container">
+            <menu class="tool-menu">
+                <form>
+                    Output:
+                    <input type="radio" id="display-raw" value="raw" v-model="outputDisplayOption">
+                    <label for="display-raw">Raw</label>
+                    <input type="radio" id="display-tokens" value="tokens" v-model="outputDisplayOption">
+                    <label for="display-tokens">Tokens</label>
+                    <input type="radio" id="display-tree" value="tree" v-model="outputDisplayOption">
+                    <label for="display-tree">Tree</label>
+                    <input type="radio" id="display-compiled" value="result" v-model="outputDisplayOption">
+                    <label for="display-compiled">Compiled</label>
+                </form>
+            </menu>
         </div>
-        <pre class="outlet" v-text="outerText"></pre>
+        <div class="input-container">
+            <div class="input" contenteditable @input="onInput"></div>
+        </div>
+        <div class="outlet-container">
+            <pre v-if="outputDisplayOption === 'result'" class="outlet result" v-text="''"></pre>
+            <pre v-else-if="outputDisplayOption === 'tree'" class="outlet tree" v-text="''"></pre>
+            <pre v-else-if="outputDisplayOption === 'tokens'" class="outlet tokens" v-text="tokenString"></pre>
+            <pre v-else class="outlet" v-text="outerText"></pre>
+        </div>
     </div>
 </template>
 
 <style lang="less" scoped>
 .parser-test-workspace {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    .outlet,
-    .input {
-        counter-reset: line;
-        flex-basis: 50%;
-        outline: none;
-        background-color: color-mix(in srgb, transparent, black 75%,);
-        color: inherit;
+    position: absolute;
+
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+
+    display: grid;
+    grid-template-columns:
+        50% 50%;
+    grid-template-rows:
+        min-content
+        auto;
+    grid-template-areas: 
+        't t'
+        'i o';
+
+    > * {
         border: 1px solid var(--border-color);
-        margin: 0px;
-        text-indent: 0px;
+    }
+
+    .tool-container {
+        grid-area: t;
+        .tool-menu {
+            padding: 0px;
+            margin: 0px;
+            display: flex;
+        }
+    }
+
+    .input-container {
+        grid-area: i;
+        .input {
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+    }
+
+    .outlet-container {
+        grid-area: o;
+        .outlet {
+            max-width: 100%;
+            height: 100%;
+            word-wrap: break-word;
+            text-wrap: wrap;
+        }
     }
 }
 </style>
