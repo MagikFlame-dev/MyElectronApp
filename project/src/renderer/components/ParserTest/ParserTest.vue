@@ -133,6 +133,8 @@ const outputDisplayOption = ref<TOutputDisplayOptions>('tokens')
         grid-area: i;
         overflow: auto;
         .input {
+            margin: 0px;
+            padding: 0px;
             width: 100%;
             height: 100%;
             outline: none;
@@ -143,6 +145,8 @@ const outputDisplayOption = ref<TOutputDisplayOptions>('tokens')
         grid-area: o;
         overflow: auto;
         .outlet {
+            margin: 0px;
+            padding: 0px;
             max-width: 100%;
             height: 100%;
             word-wrap: break-word;
