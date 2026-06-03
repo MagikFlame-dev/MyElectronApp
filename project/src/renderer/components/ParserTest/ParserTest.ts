@@ -102,7 +102,7 @@ const parser = reactive(new Parser<Tokens, Nodes, number>(
 
             throw Token.InvalidSyntaxError(consumer.current)
         },
-        'DICE': (consumer, parser) => {
+        'DICE': (consumer) => {
             let count = 1
             if (consumer.match('NUM')) {
                 count = Number(consumer.consume('NUM').raw)
