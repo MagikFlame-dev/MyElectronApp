@@ -1,3 +1,4 @@
+import { InvalidSyntaxError } from "./errors.js";
 import { Consumer, IConsumerWithCurrent } from "./helper.js";
 
 export type TokensOf<T extends readonly TokenDef<string>[]> =
@@ -17,6 +18,10 @@ export interface IToken<T extends string = string> {
 }
 
 export class Token<T extends string> implements IToken<T> {
+    static InvalidSyntaxError<T extends string>(token?: Token<T>): InvalidSyntaxError {
+        return new InvalidSyntaxError(`${token?.raw}`, Number(token?.row), Number(token?.pos))
+    }
+
     public readonly type: T;
     
     public readonly row: number;
@@ -37,7 +42,7 @@ export class Token<T extends string> implements IToken<T> {
 }
 
 interface TokenizerOptions {
-    collect?: boolean | number
+    runLength?: boolean | { max?: number, until?: string | RegExp }
 }
 
 type TokenDef<T extends string> = [
@@ -49,17 +54,20 @@ type TokenDef<T extends string> = [
     options?: TokenizerOptions
 ]
 
-const CollectTokenizer = <T extends string>(consumer: StringConsumer, expected: string | RegExp, tokenType: T, collect?: number | boolean): Token<T> => {
+const CollectTokenizer = <T extends string>(consumer: StringConsumer, expected: string | RegExp, tokenType: T, runLength?: { max?: number, until?: string | RegExp }): Token<T> => {
     let collection: string[] = []
     const pos = consumer.getPosition()
-
+    let count = 0
     while(consumer.match(expected)) {
-        if (collect && (typeof collect === 'number' && collection.length === collect)) { break; }
-        
+        if ((runLength?.until !== undefined) && consumer.match(runLength.until)) {
+            break;
+        }
+        if ((runLength?.max ?? -1) >= count) {
+            break;
+        }
         collection.push(consumer.current)
         consumer.advance()
     }
-
     const result = new Token({
         type: tokenType, 
         value: collection.join(''),
@@ -143,8 +151,8 @@ export class Lexer<Tokens extends string> {
                 consumer.advance()
                 continue
             }
-            else if (tokenizer[2]?.collect) {
-                result.push(CollectTokenizer<Tokens>(consumer, tokenizer[0], tokenizer[1], tokenizer[2]?.collect ))
+            else if (tokenizer[2]?.runLength) {
+                result.push(CollectTokenizer<Tokens>(consumer, tokenizer[0], tokenizer[1], !(typeof tokenizer[2].runLength === 'boolean') ? tokenizer[2].runLength : {} ))
                 continue
             }
             else {

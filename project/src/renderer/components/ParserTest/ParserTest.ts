@@ -1,72 +1,124 @@
-import { NotImplementedError } from "@renderer/scripts/errors.js"
+import { HintedString } from "@renderer/scripts/helper.js"
+import { Interpreter } from "@renderer/scripts/interpreter.js"
 import { Lexer, Token, TokensOf } from "@renderer/scripts/lexer.js"
 import { Parser, ASTNode, ASTSymbols } from "@renderer/scripts/parser.js"
 import { reactive } from "vue"
 
 const lexer = reactive(new Lexer(
-    [/\s/, "WS", {collect: true}],
-    [/\d/, 'NUM', { collect: true }],
+    [/\s/, "WS", { runLength: true}],
+    [/\d/, 'NUM', { runLength: true }],
     [/\./, 'DOT'],
-    [/,/, 'COMMA'],
     [/:/, 'COLON'],
     [/\(/, 'LPAREN'],
     [/\)/, 'RPAREN'],
-    [/\{/, 'LBRACKET'],
-    [/\}/, 'RBRACKET'],
-    [/;/, 'SEMICOLON'],
-    [/=/, 'ASSIGN'],
-    [/['"`]/, 'QUOTATION'],
-    [/[^;^\s^:^,^=]/, 'WORD', { collect: true }],
-    [/[\+\-\*\/\&\|]/, 'BINOP'],
+    [/[\+\-\*\/]/, 'BINOP'],
+    [/[\S]/, 'TEXT', { runLength: { until: /[,;='\s\d]/ } }],
 ))
 type Tokens = TokensOf<typeof lexer.tokenizer>
 
+
 type Nodes
-    = 'BLOCK'
-    | 'BINOP'
+    = 'TERM'
+    | 'DICE'
     | 'NUMBER'
-    | 'VAR'
-    | 'FUNC'
-    | 'KEYWORD'
-    | 'START';
+    | 'EXPRESSION';
 
-class VarNode extends ASTNode<Nodes, number> {
+class DiceNode extends ASTNode<Nodes, number> {
     [ASTSymbols.Interpret](): number {
-        return this.node[ASTSymbols.Interpret]()
+        let res = 0
+        for (let i = 0; i < this.count; i++) {
+            res += Math.round(Math.random() * this.sides)
+        }
+        return res
     }
-
     constructor(
-        public readonly name: string,
-        private node: ASTNode<Nodes, number>
-    ) { super('VAR') }
+        public count: number,
+        public sides: number,
+    ) { super('DICE') }
 }
 
 class NumberNode extends ASTNode<Nodes, number> {
     [ASTSymbols.Interpret](): number {
         return this.value
     }
-    
     constructor(
         public value: number
     ) { super('NUMBER') }
 }
 
-class BlockNode extends ASTNode<Nodes, number> {
+class BinOpNode extends ASTNode<Nodes, number> {
     [ASTSymbols.Interpret](): number {
-        throw new Error("Method not implemented.")
+        const left = this.left[ASTSymbols.Interpret]()
+        const right = this.right[ASTSymbols.Interpret]()
+        switch(this.operation) {
+            case '*': return left * right;
+            case '+': return left + right;
+            case '-': return left - right;
+            case '/': return left / right;
+            default: throw new Error(`invalid operator ${this.operation}`) 
+        }
     }
+    constructor(
+        public left: ASTNode<Nodes, number>,
+        public operation: HintedString<'+' | '-' | '*' | '/'>,
+        public right: ASTNode<Nodes, number>,
+    ) { super('EXPRESSION') }
 }
 
 const parser = reactive(new Parser<Tokens, Nodes, number>(
-    'START', {
-        'START': (consumer, parse) => {throw new NotImplementedError('BLOCK')},
-        'BLOCK': (consumer, parse) => {throw new NotImplementedError('BLOCK')},
-        'BINOP': (consumer, parse) => {throw new NotImplementedError('BINOP')},
-        'NUMBER': (consumer, parse) => {throw new NotImplementedError('NUMBER')},
-        'KEYWORD': (consumer, parse) => {throw new NotImplementedError('FUNC')},
-        'VAR': (consumer, parse) => {throw new NotImplementedError('VAR')},
-        'FUNC': (consumer, parse) => {throw new NotImplementedError('FUNC')},
+    'EXPRESSION', {
+        'EXPRESSION': (consumer, parser) => {
+            let node = parser('TERM')
+            consumer.skipAll('WS')
+
+            while (consumer.match('BINOP')) {
+                consumer.skipAll('WS')
+                const op = consumer.consume('BINOP').raw
+                consumer.skipAll('WS')
+                const right = parser('TERM')
+                consumer.skipAll('WS')
+                node = new BinOpNode(node, op, right)
+            }
+    
+            return node
+        },
+        'TERM': (consumer, parser) => {
+            consumer.skipAll('WS')
+            if (consumer.match('NUM')) {
+                if (consumer.peek(1)?.type === 'TEXT') {
+                    return parser('DICE')
+                }
+                else {
+                    return new NumberNode(Number(consumer.consume('NUM').raw))
+                }
+            }
+
+            if (consumer.match('LPAREN')) {
+                consumer.consume('LPAREN')
+                const node = parser('EXPRESSION')
+                consumer.consume('RPAREN')
+                return node
+            }
+
+            throw Token.InvalidSyntaxError(consumer.current)
+        },
+        'DICE': (consumer, parser) => {
+            let count = 1
+            if (consumer.match('NUM')) {
+                count = Number(consumer.consume('NUM').raw)
+            }
+
+            const token = consumer.consume('TEXT')
+            if (!/[dD]/.test(token.raw)) {
+                throw Token.InvalidSyntaxError(token)
+            }
+            const sides = Number(consumer.consume('NUM').raw)
+            
+            return new DiceNode(count, sides)
+        }
     }
 ))
 
-export { lexer, parser }
+const interpreter = reactive(new Interpreter<number>())
+
+export { lexer, parser, interpreter }

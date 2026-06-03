@@ -80,5 +80,20 @@ export abstract class Consumer<Value, Test, Target extends ArrayLike<Value> = Ar
         throw new UnexpectedValueError(expected, this.current)
     }
 
+    public consume(expected: Test): Value {
+        if (!this.match(expected)) {
+            throw new UnexpectedValueError(expected, this.current)
+        }
+        const result = this.current
+        this.advance(1)
+        return result;
+    }
+
+    public skipAll(...expected: Test[]) {
+        while(expected.some(expect => this.match(expect))) {
+            this.advance(1)
+        }
+    }
+
     abstract match(expected: Test): this is IConsumerWithCurrent<Value, Test>
 }

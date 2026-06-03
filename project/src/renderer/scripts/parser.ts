@@ -1,3 +1,4 @@
+import { NotImplementedError } from "./errors.js";
 import { Consumer, IConsumerWithCurrent } from "./helper.js";
 import { IToken } from "./lexer.js";
 
@@ -34,7 +35,7 @@ interface ParseFn<T extends string, N extends string, V> {
 
 export class Parser<T extends string, N extends string, V> {
     private enter: N
-    private parserFunctions: Record<N, ParseFn<T, N, V>>
+    private parserFunctions: Partial<Record<N, ParseFn<T, N, V>>>
 
     constructor(enter: N, parserFunctions: Parser<T, N, V>['parserFunctions']) {
         this.enter = enter;
@@ -44,7 +45,11 @@ export class Parser<T extends string, N extends string, V> {
     private createRecursiveParser(consumer: TokenConsumer<T>) {
         const parser = this.parserFunctions 
         const result = function(name: N): ReturnType<ParseFn<T, N, V>> {
-            return parser[name](consumer, result)
+            if (parser[name]) {
+                return parser[name](consumer, result)
+            } else {
+                throw new NotImplementedError(`parser(${name})`)
+            }
         }
         return result
     }
@@ -52,6 +57,6 @@ export class Parser<T extends string, N extends string, V> {
     public parse(tokens: IToken<T>[]): ASTNode<N, V> {
         const consumer = new TokenConsumer(tokens)
         const recursiveParser = this.createRecursiveParser(consumer)
-        return this.parserFunctions[this.enter](consumer, recursiveParser)
+        return recursiveParser(this.enter)
     }
 }

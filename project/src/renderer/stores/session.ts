@@ -9,7 +9,7 @@ export type ShortCut = {
 const useAppSessionStore = defineStore('app-session', () => {
     const _version = reactive({
         major: 0,
-        minor: 0,
+        minor: 1,
         patch: 0,
     })
 
