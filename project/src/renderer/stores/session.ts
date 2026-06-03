@@ -10,7 +10,7 @@ const useAppSessionStore = defineStore('app-session', () => {
     const _version = reactive({
         major: 0,
         minor: 1,
-        patch: 1,
+        patch: 2,
     })
 
     const title = ref('MyApp')
