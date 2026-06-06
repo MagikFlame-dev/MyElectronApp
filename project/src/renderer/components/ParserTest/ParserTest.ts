@@ -11,7 +11,7 @@ const lexer = reactive(new Lexer(
     [/:/, 'COLON'],
     [/\(/, 'LPAREN'],
     [/\)/, 'RPAREN'],
-    [/[\+\-\*\/]/, 'BINOP'],
+    [/[\+\-]/, 'BINOP'],
     [/[\S]/, 'TEXT', { runLength: { until: /[,;='\s\d]/ } }],
 ))
 type Tokens = TokensOf<typeof lexer.tokenizer>
@@ -53,8 +53,6 @@ class BinOpNode extends ASTNode<Nodes, number> {
         switch(this.operation) {
             case '*': return left * right;
             case '+': return left + right;
-            case '-': return left - right;
-            case '/': return left / right;
             default: throw new Error(`invalid operator ${this.operation}`) 
         }
     }
@@ -79,7 +77,7 @@ const parser = reactive(new Parser<Tokens, Nodes, number>(
                 consumer.skipAll('WS')
                 node = new BinOpNode(node, op, right)
             }
-    
+
             return node
         },
         'TERM': (consumer, parser) => {
