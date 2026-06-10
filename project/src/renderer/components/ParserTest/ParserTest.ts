@@ -7,7 +7,6 @@ import { reactive } from "vue"
 const lexer = reactive(new Lexer(
     [/\s/, "WS", { runLength: true}],
     [/\d/, 'NUM', { runLength: true }],
-    [/\./, 'DOT'],
     [/:/, 'COLON'],
     [/\(/, 'LPAREN'],
     [/\)/, 'RPAREN'],
@@ -15,7 +14,6 @@ const lexer = reactive(new Lexer(
     [/[\S]/, 'TEXT', { runLength: { until: /[,;='\s\d]/ } }],
 ))
 type Tokens = TokensOf<typeof lexer.tokenizer>
-
 
 type Nodes
     = 'TERM'

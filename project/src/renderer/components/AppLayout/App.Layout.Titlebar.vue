@@ -10,7 +10,6 @@ const appSession = useAppSessionStore()
             {{ appSession.title }}
         </span>
         <span class="titlebar-panel center">
-            
         </span>
         <span class="titlebar-panel end">
             
