@@ -72,12 +72,12 @@ export abstract class Consumer<Value, Test, Target extends ArrayLike<Value> = Ar
         this.idx += by
     }
 
-    public expect(expected: Test): boolean {
-        if (this.match(expected)) {
-            this.advance()
-            return true
+    public expect(expected: Test): this is IConsumerWithCurrent<Value, Test> {
+        if (!this.match(expected)) {
+            throw new UnexpectedValueError(expected, this.current)
         }
-        throw new UnexpectedValueError(expected, this.current)
+        this.advance(1)
+        return true
     }
 
     public consume(expected: Test): Value {

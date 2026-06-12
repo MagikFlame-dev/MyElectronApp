@@ -91,7 +91,7 @@ const outputDisplayOption = ref<TOutputDisplayOptions>('tokens')
         <div class="outlet-container">
             <pre v-if="outputDisplayOption === 'result'" class="outlet result" v-text="result"></pre>
             <pre v-else-if="outputDisplayOption === 'tree'" class="outlet tree" v-text="ast ?? 'ERROR'"></pre>
-            <pre v-else-if="outputDisplayOption === 'tokens'" class="outlet tokens" v-text="tokens.map(token => `${token}`)"></pre>
+            <pre v-else-if="outputDisplayOption === 'tokens'" class="outlet tokens" v-text="tokens.map(token => `${token}`).join(' ')"></pre>
             <pre v-else class="outlet" v-text="outerText"></pre>
         </div>
     </div>

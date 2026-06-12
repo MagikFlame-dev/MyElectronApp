@@ -1,7 +1,7 @@
 import { HintedString } from "@renderer/scripts/helper.js"
 import { Interpreter } from "@renderer/scripts/interpreter.js"
 import { Lexer, Token, TokensOf } from "@renderer/scripts/lexer.js"
-import { Parser, ASTNode, ASTSymbols } from "@renderer/scripts/parser.js"
+import { Parser, ASTNode, ASTSymbols, ParseFn } from "@renderer/scripts/parser.js"
 import { reactive } from "vue"
 
 const lexer = reactive(new Lexer(
@@ -11,7 +11,7 @@ const lexer = reactive(new Lexer(
     [/\(/, 'LPAREN'],
     [/\)/, 'RPAREN'],
     [/[\+\-]/, 'BINOP'],
-    [/[\S]/, 'TEXT', { runLength: { until: /[,;='\s\d]/ } }],
+    [/[a-zA-Z]/, 'TEXT', { runLength: true }],
 ))
 type Tokens = TokensOf<typeof lexer.tokenizer>
 
@@ -32,6 +32,7 @@ class DiceNode extends ASTNode<Nodes, number> {
     constructor(
         public count: number,
         public sides: number,
+        public mod?: string,
     ) { super('DICE') }
 }
 
@@ -44,7 +45,7 @@ class NumberNode extends ASTNode<Nodes, number> {
     ) { super('NUMBER') }
 }
 
-class BinOpNode extends ASTNode<Nodes, number> {
+class ExpressionNode extends ASTNode<Nodes, number> {
     [ASTSymbols.Interpret](): number {
         const left = this.left[ASTSymbols.Interpret]()
         const right = this.right[ASTSymbols.Interpret]()
@@ -61,57 +62,69 @@ class BinOpNode extends ASTNode<Nodes, number> {
     ) { super('EXPRESSION') }
 }
 
+const parseExpression: ParseFn<Tokens, Nodes, number> = (consumer, parser) => {
+    let node = parser('TERM')
+    consumer.skipAll('WS')
+
+    while (consumer.match('BINOP')) {
+        consumer.skipAll('WS')
+        const op = consumer.consume('BINOP').raw
+        consumer.skipAll('WS')
+        const right = parser('TERM')
+        consumer.skipAll('WS')
+        node = new ExpressionNode(node, op, right)
+    }
+
+    return node
+}
+
+const parseTerm: ParseFn<Tokens, Nodes, number> = (consumer, parser) => {
+    consumer.skipAll('WS')
+
+    if (consumer.match('NUM')) {
+        if (consumer.peek(1)?.type === 'TEXT') {
+            return parser('DICE')
+        }
+
+        else {
+            return new NumberNode(Number(consumer.consume('NUM').raw))
+        }
+    }
+
+    if (consumer.match('LPAREN')) {
+        consumer.consume('LPAREN')
+        const node = parser('EXPRESSION')
+        consumer.consume('RPAREN')
+        return node
+    }
+
+    throw Token.InvalidSyntaxError(consumer.current)
+}
+
+
+const parseDice: ParseFn<Tokens, Nodes, number> = (consumer) => {
+    const count = Number(consumer.consume('NUM').raw)
+    const text = consumer.consume('TEXT')
+
+    if (!/[dD]/.test(text.raw)) {throw Token.InvalidSyntaxError(text)}
+
+    const sides = Number(consumer.consume('NUM').raw)
+    
+    let mod: string | undefined = undefined
+    
+    if (consumer.match('COLON')) {
+        consumer.consume('COLON')
+        mod = consumer.consume('TEXT').raw
+    }
+
+    return new DiceNode(count, sides, mod ?? '')
+}
+
 const parser = reactive(new Parser<Tokens, Nodes, number>(
     'EXPRESSION', {
-        'EXPRESSION': (consumer, parser) => {
-            let node = parser('TERM')
-            consumer.skipAll('WS')
-
-            while (consumer.match('BINOP')) {
-                consumer.skipAll('WS')
-                const op = consumer.consume('BINOP').raw
-                consumer.skipAll('WS')
-                const right = parser('TERM')
-                consumer.skipAll('WS')
-                node = new BinOpNode(node, op, right)
-            }
-
-            return node
-        },
-        'TERM': (consumer, parser) => {
-            consumer.skipAll('WS')
-            if (consumer.match('NUM')) {
-                if (consumer.peek(1)?.type === 'TEXT') {
-                    return parser('DICE')
-                }
-                else {
-                    return new NumberNode(Number(consumer.consume('NUM').raw))
-                }
-            }
-
-            if (consumer.match('LPAREN')) {
-                consumer.consume('LPAREN')
-                const node = parser('EXPRESSION')
-                consumer.consume('RPAREN')
-                return node
-            }
-
-            throw Token.InvalidSyntaxError(consumer.current)
-        },
-        'DICE': (consumer) => {
-            let count = 1
-            if (consumer.match('NUM')) {
-                count = Number(consumer.consume('NUM').raw)
-            }
-
-            const token = consumer.consume('TEXT')
-            if (!/[dD]/.test(token.raw)) {
-                throw Token.InvalidSyntaxError(token)
-            }
-            const sides = Number(consumer.consume('NUM').raw)
-            
-            return new DiceNode(count, sides)
-        }
+        'EXPRESSION': parseExpression,
+        'TERM': parseTerm,
+        'DICE': parseDice,
     }
 ))
 

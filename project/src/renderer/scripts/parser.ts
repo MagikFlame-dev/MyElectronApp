@@ -29,7 +29,7 @@ class TokenConsumer<T extends string> extends Consumer<IToken<T>, T> {
     }
 }
 
-interface ParseFn<T extends string, N extends string, V> {
+export interface ParseFn<T extends string, N extends string, V> {
     (consumer: TokenConsumer<T>, parseRecursive: (name: N) => ASTNode<N, V>): ASTNode<N, V>
 }
 

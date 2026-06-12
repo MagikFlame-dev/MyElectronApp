@@ -42,12 +42,18 @@ export class Token<T extends string> implements IToken<T> {
 }
 
 interface TokenizerOptions {
-    runLength?: boolean | { max?: number, until?: string | RegExp }
+    runLength?: boolean | {
+        max?: number,
+        until?: string | RegExp
+    }
 }
+
+type Tokenizer<T extends string> =
+    (consumer: Consumer<string, string | RegExp>) => Token<T>
 
 type TokenDef<T extends string> = [
     start: string | RegExp,
-    tokenizer: ((consumer: Consumer<string, string | RegExp>) => Token<T>),
+    tokenizer: Tokenizer<T>,
 ] | [
     start: string | RegExp,
     tokenType: T,
@@ -139,7 +145,7 @@ export class Lexer<Tokens extends string> {
         const consumer = new StringConsumer(str)
 
         while(!consumer.isEof()) {
-            /** TODO Performance im Auge behalten, evtl. Suchalgorithmus für tokeneizer verbessern */
+            /** TODO Performance im Auge behalten, evtl. Suchalgorithmus für tokenizer verbessern */
             const tokenizer = this.tokenizer.find(t => consumer.match(t[0]))
 
             if (!tokenizer) {
