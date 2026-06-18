@@ -1,4 +1,4 @@
-import { HintedString } from "@renderer/scripts/helper.js"
+import { HintedString, sumArray } from "@renderer/scripts/helper.js"
 import { Interpreter } from "@renderer/scripts/interpreter.js"
 import { Lexer, Token, TokensOf } from "@renderer/scripts/lexer.js"
 import { Parser, ASTNode, ASTSymbols, ParseFn } from "@renderer/scripts/parser.js"
@@ -22,18 +22,58 @@ type Nodes
     | 'EXPRESSION';
 
 class DiceNode extends ASTNode<Nodes, number> {
+    private dices: number[]
+
+    public modtype: string = '';
+    public modvalue: number = 1;
+
     [ASTSymbols.Interpret](): number {
-        let res = 0
-        for (let i = 0; i < this.count; i++) {
-            res += Math.round(Math.random() * this.sides)
-        }
-        return res
+        this.rollDices()
+        return this.evalDices()
     }
     constructor(
         public count: number,
         public sides: number,
-        public mod?: string,
-    ) { super('DICE') }
+    ) {
+        super('DICE')
+        this.dices = Array.from(Array(count)).map(() => sides)
+    }
+
+    private rollDices(): void {
+        for (let i = 0; i < this.dices.length; i++) {
+            this.dices[i] = Math.round(Math.random() * this.sides)
+        }
+        console.log('rolled', this.dices)
+    }
+    private evalDices(): number {
+        switch(this.modtype) {
+            case 'dl': {
+                const sorted = this.sortedDiceASC().slice(this.modvalue)
+                return sumArray(...sorted);
+            }
+            case 'dh': {
+                const sorted = this.sortedDiceDESC().slice(this.modvalue)
+                return sumArray(...sorted);
+            }
+            case 'kl': {
+                const sorted = this.sortedDiceASC().slice(0, this.modvalue)
+                return sumArray(...sorted);
+            }
+            case 'kh': {
+                const sorted = this.sortedDiceDESC().slice(0, this.modvalue)
+                return sumArray(...sorted);
+            }
+            default: {
+                return sumArray(...this.dices)
+            }
+        }
+    }
+    private sortedDiceASC() {
+        return this.dices.slice().sort((a, b) => a-b)
+    }
+    private sortedDiceDESC() {
+        return this.dices.slice().sort((a, b) => b-a)
+    }
 }
 
 class NumberNode extends ASTNode<Nodes, number> {
@@ -110,14 +150,22 @@ const parseDice: ParseFn<Tokens, Nodes, number> = (consumer) => {
 
     const sides = Number(consumer.consume('NUM').raw)
     
-    let mod: string | undefined = undefined
+    // bis hier hin, ursprüngliche auswertung
+    const dice = new DiceNode(count, sides)
     
     if (consumer.match('COLON')) {
         consumer.consume('COLON')
-        mod = consumer.consume('TEXT').raw
+        dice.modtype = consumer.consume('TEXT').raw
+
+        // checken ob ein wert für die modifikation überreicht wird
+        if (consumer.match('LPAREN')) {
+            consumer.consume('LPAREN')
+            dice.modvalue = Number(consumer.consume('NUM').raw)
+            consumer.consume('RPAREN')
+        }
     }
 
-    return new DiceNode(count, sides, mod ?? '')
+    return dice
 }
 
 const parser = reactive(new Parser<Tokens, Nodes, number>(

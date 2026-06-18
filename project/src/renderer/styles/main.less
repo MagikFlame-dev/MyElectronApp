@@ -6,25 +6,25 @@
     --pallete-4: hsl(160, 3%, 43%);
     --pallete-5: #392c3a;
 }
-// :root {
-//     --font-color: black;
-//     --bg-color: white;
-//     --border-color: var(--pallete-5);
+:root {
+    --font-color: black;
+    --bg-color: white;
+    --border-color: var(--pallete-5);
+}
+// @media (prefers-color-scheme: light) {
+//     :root {
+//         --font-color: black;
+//         --bg-color: white;
+//         --border-color: var(--pallete-5);
+//     }
 // }
-@media (prefers-color-scheme: light) {
-    :root {
-        --font-color: black;
-        --bg-color: white;
-        --border-color: var(--pallete-5);
-    }
-}
-@media (prefers-color-scheme: dark) {
-    :root {
-        --font-color: white;
-        --bg-color: color-mix(in srgb, var(--pallete-5), black 66%);
-        --border-color: color-mix(in srgb, var(--pallete-5), white 15%);
-    }
-}
+// @media (prefers-color-scheme: dark) {
+//     :root {
+//         --font-color: white;
+//         --bg-color: color-mix(in srgb, var(--pallete-5), black 66%);
+//         --border-color: color-mix(in srgb, var(--pallete-5), white 15%);
+//     }
+// }
 :root {
     --highlight-bg-color: color-mix(in srgb, var(--bg-color), var(--pallete-1) 20%);
     --transparent-bg-0: color-mix(in srgb, var(--bg-color), transparent 10%);

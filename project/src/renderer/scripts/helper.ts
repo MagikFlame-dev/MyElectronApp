@@ -97,3 +97,9 @@ export abstract class Consumer<Value, Test, Target extends ArrayLike<Value> = Ar
 
     abstract match(expected: Test): this is IConsumerWithCurrent<Value, Test>
 }
+
+export function sumArray(...values: number[]): number {
+    let res = 0
+    values.forEach(v => res += v)
+    return res 
+}
